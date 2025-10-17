@@ -1,0 +1,26 @@
+[
+  {
+    "titulo": "TechHub (conceito)",
+    "descricao": "Sistema de backlog/changelog com múltiplos papéis e notificações. Stack: Laravel + Livewire + PostgreSQL + Docker.",
+    "capa": "https://placehold.co/800x450/8b5cf6/ffffff?text=TechHub",
+    "tags": ["Laravel", "PostgreSQL", "Docker"],
+    "link": "#",
+    "meta": "Em desenvolvimento"
+  },
+  {
+    "titulo": "Psychoflix (conceito)",
+    "descricao": "Plataforma de agendamentos para profissionais, perfis e pagamentos.",
+    "capa": "https://placehold.co/800x450/22d3ee/0b1324?text=Psychoflix",
+    "tags": ["Django", "Tailwind", "REST"],
+    "link": "#",
+    "meta": "Protótipo"
+  },
+  {
+    "titulo": "FutebolSeguro (landing)",
+    "descricao": "Landing page com cards dinâmicos e responsivos.",
+    "capa": "https://placehold.co/800x450/fb7185/0b1324?text=FutebolSeguro",
+    "tags": ["HTML", "Tailwind", "JS"],
+    "link": "#",
+    "meta": "UI/UX"
+  }
+]
