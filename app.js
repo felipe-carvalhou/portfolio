@@ -93,54 +93,193 @@ async function loadProjects() {
 loadProjects();
 
 const techs = [
-  {
-    name: "PHP",
-    icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg",
-  },
-  {
-    name: "JavaScript",
-    icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg",
-  },
-  {
-    name: "Python",
-    icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg",
-  },
-  {
-    name: "Laravel",
-    icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/laravel/laravel-original.svg",
-  },
-  {
-    name: "Django",
-    icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/django/django-plain.svg",
-  },
-  {
-    name: "PostgreSQL",
-    icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg",
-  },
-  {
-    name: "Docker",
-    icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-plain.svg",
-  },
-  {
-    name: "HTML5",
-    icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg",
-  },
-  {
-    name: "Git",
-    icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg",
-  },
-  {
-    name: "Linux/WSL",
-    icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/linux/linux-original.svg",
-  },
-  {
-    name: "Node/APIs",
-    icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg",
-  },
+  {name:"PHP",icon:"https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg"},
+  {name:"JavaScript",icon:"https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg"},
+  {name:"Python",icon:"https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg"},
+  {name:"Laravel",icon:"https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/laravel/laravel-original.svg"},
+  {name:"Django",icon:"https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/django/django-plain.svg"},
+  {name:"PostgreSQL",icon:"https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg"},
+  {name:"Docker",icon:"https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-plain.svg"},
+  {name:"HTML5",icon:"https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg"},
+  {name:"Git",icon:"https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg"},
+  {name:"Linux/WSL",icon:"https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/linux/linux-original.svg"},
+  {name:"Node/APIs",icon:"https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg"}
 ];
 
 const track = document.getElementById("tech-track");
-const wrap = document.getElementById("stackWrap");
+const wrap  = document.getElementById("stackWrap");
+
+if (track && wrap) {
+  const itemHTML = (t) => `
+    <li class="min-w-[140px] no-select">
+      <figure class="group p-3 rounded-2xl bg-slate-900/60 border border-white/10 hover:shadow-glow transition text-center">
+        <img class="h-10 mx-auto" alt="${t.name}" src="${t.icon}" loading="lazy" decoding="async">
+        <figcaption class="mt-2 text-xs text-slate-300">${t.name}</figcaption>
+      </figure>
+    </li>`;
+
+  // conteúdo duplicado para loop infinito
+  track.innerHTML = techs.concat(techs).map(itemHTML).join("");
+
+  // estado
+  let paused = false;
+  let isDragging = false;
+  let x = 0;
+  let startX = 0;
+  let startOffset = 0;
+
+  // velocidade e aceleração leve ao arrastar
+  let speed = 0.6;
+  let dragBoost = 0;
+
+  // recálculo em resize (iOS pode variar a largura)
+  const getHalf = () => track.scrollWidth / 2;
+
+  function loop() {
+    if (!paused && !isDragging) {
+      x -= speed + dragBoost;
+      const half = getHalf();
+      if (half > 0 && -x >= half) x = 0;
+      // usa translate3d para suavizar no mobile
+      track.style.transform = `translate3d(${x}px,0,0)`;
+      // desacelera o "boost" de arraste aos poucos
+      dragBoost *= 0.95;
+      if (dragBoost < 0.01) dragBoost = 0;
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  // pausa no hover (desktop)
+  wrap.addEventListener("mouseenter", () => paused = true);
+  wrap.addEventListener("mouseleave", () => paused = false);
+
+  // arraste por pointer (mobile + desktop)
+  wrap.addEventListener("pointerdown", (e) => {
+    isDragging = true;
+    paused = true;
+    startX = e.clientX;
+    startOffset = x;
+    wrap.setPointerCapture(e.pointerId);
+  }, { passive: true });
+
+  wrap.addEventListener("pointermove", (e) => {
+    if (!isDragging) return;
+    x = startOffset + (e.clientX - startX);
+    track.style.transform = `translate3d(${x}px,0,0)`;
+  }, { passive: true });
+
+  function endDrag() {
+    if (!isDragging) return;
+    // calcula "boost" com base no último deslocamento
+    const delta = x - startOffset;
+    dragBoost = Math.max(-2, Math.min(2, delta * 0.01));
+    isDragging = false;
+    paused = false;
+  }
+
+  wrap.addEventListener("pointerup", endDrag, { passive: true });
+  wrap.addEventListener("pointercancel", endDrag, { passive: true });
+
+  // respeita acessibilidade
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    speed = 0.2;
+  }
+
+  // revalida posição ao rotacionar tela/trocar zoom
+  window.addEventListener("resize", () => {
+    const half = getHalf();
+    if (half > 0 && -x >= half) x = 0;
+    track.style.transform = `translate3d(${x}px,0,0)`;
+  });
+}
+
+
+if (track && wrap) {
+  const itemHTML = (t) => `
+    <li class="min-w-[140px] no-select">
+      <figure class="group p-3 rounded-2xl bg-slate-900/60 border border-white/10 hover:shadow-glow transition text-center">
+        <img class="h-10 mx-auto" alt="${t.name}" src="${t.icon}" loading="lazy" decoding="async">
+        <figcaption class="mt-2 text-xs text-slate-300">${t.name}</figcaption>
+      </figure>
+    </li>`;
+
+  // conteúdo duplicado para loop infinito
+  track.innerHTML = techs.concat(techs).map(itemHTML).join("");
+
+  // estado
+  let paused = false;
+  let isDragging = false;
+  let x = 0;
+  let startX = 0;
+  let startOffset = 0;
+
+  // velocidade e aceleração leve ao arrastar
+  let speed = 0.6;
+  let dragBoost = 0;
+
+  // recálculo em resize (iOS pode variar a largura)
+  const getHalf = () => track.scrollWidth / 2;
+
+  function loop() {
+    if (!paused && !isDragging) {
+      x -= speed + dragBoost;
+      const half = getHalf();
+      if (half > 0 && -x >= half) x = 0;
+      // usa translate3d para suavizar no mobile
+      track.style.transform = `translate3d(${x}px,0,0)`;
+      // desacelera o "boost" de arraste aos poucos
+      dragBoost *= 0.95;
+      if (dragBoost < 0.01) dragBoost = 0;
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  // pausa no hover (desktop)
+  wrap.addEventListener("mouseenter", () => paused = true);
+  wrap.addEventListener("mouseleave", () => paused = false);
+
+  // arraste por pointer (mobile + desktop)
+  wrap.addEventListener("pointerdown", (e) => {
+    isDragging = true;
+    paused = true;
+    startX = e.clientX;
+    startOffset = x;
+    wrap.setPointerCapture(e.pointerId);
+  }, { passive: true });
+
+  wrap.addEventListener("pointermove", (e) => {
+    if (!isDragging) return;
+    x = startOffset + (e.clientX - startX);
+    track.style.transform = `translate3d(${x}px,0,0)`;
+  }, { passive: true });
+
+  function endDrag() {
+    if (!isDragging) return;
+    // calcula "boost" com base no último deslocamento
+    const delta = x - startOffset;
+    dragBoost = Math.max(-2, Math.min(2, delta * 0.01));
+    isDragging = false;
+    paused = false;
+  }
+
+  wrap.addEventListener("pointerup", endDrag, { passive: true });
+  wrap.addEventListener("pointercancel", endDrag, { passive: true });
+
+  // respeita acessibilidade
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    speed = 0.2;
+  }
+
+  // revalida posição ao rotacionar tela/trocar zoom
+  window.addEventListener("resize", () => {
+    const half = getHalf();
+    if (half > 0 && -x >= half) x = 0;
+    track.style.transform = `translate3d(${x}px,0,0)`;
+  });
+}
+
 
 if (track && wrap) {
   const itemHTML = (t) =>
